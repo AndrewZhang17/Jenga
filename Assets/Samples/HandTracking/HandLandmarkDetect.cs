@@ -68,6 +68,11 @@ namespace TensorFlowLite
                 ? resizeOptions.GetModifedForWebcam((WebCamTexture)inputTex)
                 : resizeOptions;
 
+            options.rotationDegree = 360f - 90;
+
+            options.mirrorVertical = false;
+            options.mirrorHorizontal = false;
+
             cropMatrix = RectTransformationCalculator.CalcMatrix(new RectTransformationCalculator.Options()
             {
                 rect = palm.rect,
@@ -128,31 +133,40 @@ namespace TensorFlowLite
         public Result GetResult()
         {
             // Normalize 0 ~ 255 => 0.0 ~ 1.0
-            const float SCALE = 1f / 255f;
-            var mtx = cropMatrix.inverse;
+            try
+            {
+                const float SCALE = 1f / 255f;
+                var mtx = cropMatrix.inverse;
 
-            result.score = output1[0];
-            if (Dim == Dimension.TWO)
-            {
-                for (int i = 0; i < JOINT_COUNT; i++)
+                result.score = output1[0];
+                if (Dim == Dimension.TWO)
                 {
-                    result.joints[i] = mtx.MultiplyPoint3x4(new Vector3(
-                        output0[i * 2] * SCALE,
-                        1f - output0[i * 2 + 1] * SCALE,
-                        0
-                    ));
+                    for (int i = 0; i < JOINT_COUNT; i++)
+                    {
+                        result.joints[i] = mtx.MultiplyPoint3x4(new Vector3(
+                            output0[i * 2] * SCALE,
+                            1f - output0[i * 2 + 1] * SCALE,
+                            0
+                        ));
+                    }
                 }
+                else
+                {
+                    for (int i = 0; i < JOINT_COUNT; i++)
+                    {
+                        result.joints[i] = mtx.MultiplyPoint3x4(new Vector3(
+                            output0[i * 3] * SCALE,
+                            1f - output0[i * 3 + 1] * SCALE,
+                            output0[i * 3 + 2] * SCALE
+                        ));
+                    }
+                }
+
             }
-            else
+            catch (System.Exception e)
             {
-                for (int i = 0; i < JOINT_COUNT; i++)
-                {
-                    result.joints[i] = mtx.MultiplyPoint3x4(new Vector3(
-                        output0[i * 3] * SCALE,
-                        1f - output0[i * 3 + 1] * SCALE,
-                        output0[i * 3 + 2] * SCALE
-                    ));
-                }
+
+                HandTrackingSample.text.text = e.ToString();
             }
             return result;
         }

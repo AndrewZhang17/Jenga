@@ -37,35 +37,51 @@ public class HandTrackingSample : MonoBehaviour
     UniTask<bool> task;
     CancellationToken cancellationToken;
 
-    [SerializeField] Text text;
+    public static Text text;
+    private static readonly Matrix4x4 PUSH_MATRIX = Matrix4x4.Translate(new Vector3(0.5f, 0.5f, 0));
+    private static readonly Matrix4x4 POP_MATRIX = Matrix4x4.Translate(new Vector3(-0.5f, -0.5f, 0));
 
+    GameObject sphere;
+    GameObject cube;
+
+    GameObject[] markers = new GameObject[HandLandmarkDetect.JOINT_COUNT];
+
+    void Awake()
+    {
+        text = GameObject.FindGameObjectsWithTag("DebugText")[0].GetComponent<Text>();
+    }
 
     void Start()
     {
-        try
-        {
-            string palmPath = Path.Combine(Application.streamingAssetsPath, palmModelFile);
-            palmDetect = new PalmDetect(palmPath);
+        string palmPath = Path.Combine(Application.streamingAssetsPath, palmModelFile);
+        palmDetect = new PalmDetect(palmPath);
 
-            string landmarkPath = Path.Combine(Application.streamingAssetsPath, landmarkModelFile);
-            landmarkDetect = new HandLandmarkDetect(landmarkPath);
-            Debug.Log($"landmark dimension: {landmarkDetect.Dim}");
+        string landmarkPath = Path.Combine(Application.streamingAssetsPath, landmarkModelFile);
+        landmarkDetect = new HandLandmarkDetect(landmarkPath);
+        Debug.Log($"landmark dimension: {landmarkDetect.Dim}");
 
-            string cameraName = WebCamUtil.FindName(new WebCamUtil.PreferSpec()
-            {
-                isFrontFacing = false,
-                kind = WebCamKind.WideAngle,
-            });
-            // webcamTexture = new WebCamTexture(cameraName, 1280, 720, 30);
-            // cameraView.texture = webcamTexture;
-            // webcamTexture.Play();
-            Debug.Log($"Starting camera: {cameraName}");
-        }
-        catch (System.Exception e)
+        string cameraName = WebCamUtil.FindName(new WebCamUtil.PreferSpec()
         {
-            text.text = e.ToString();
+            isFrontFacing = false,
+            kind = WebCamKind.WideAngle,
+        });
+        // webcamTexture = new WebCamTexture(cameraName, 1280, 720, 30);
+        // cameraView.texture = webcamTexture;
+        // webcamTexture.Play();
+        Debug.Log($"Starting camera: {cameraName}");
+
+
+        sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        // cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        sphere.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
+
+        for (int i = 0; i < HandLandmarkDetect.JOINT_COUNT; i++) {
+            markers[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            markers[i].transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
         }
-        
+
+        rtCorners[0] = new Vector3(-2.4f, -1.4f, -10.0f);
+        rtCorners[2] = new Vector3(2.4f, 3.4f, -10.0f);
 
         draw = new PrimitiveDraw();
     }
@@ -79,60 +95,56 @@ public class HandTrackingSample : MonoBehaviour
 
     void Update()
     {
-        if (runBackground)
-        {
-            if (task.Status.IsCompleted())
-            {
-                task = InvokeAsync();
-            }
-        }
-        else
-        {
-            Invoke();
-        }
-
-        if (palmResults == null || palmResults.Count <= 0) return;
-        DrawFrames(palmResults);
-
-        if (landmarkResult == null || landmarkResult.score < 0.2f) return;
-        DrawCropMatrix(landmarkDetect.CropMatrix);
-        DrawJoints(landmarkResult.joints);
-        DetectGestures();
-        cameraView.texture = m_Texture;
+        // cameraView.texture = m_Texture;
+        
+        // cube.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth / 4, Camera.main.pixelHeight / 4, Camera.main.nearClipPlane + 0.01f));
+        // cube.transform.localScale = new Vector3(0.001f, 0.001f, 0.001f);
     }
 
     void Invoke()
     {
+        // text.text = "BEFORE INVOKE";
         palmDetect.Invoke(m_Texture);
         // palmDetect.Invoke(webcamTexture);
-        cameraView.material = palmDetect.transformMat;
-        cameraView.rectTransform.GetWorldCorners(rtCorners);
+        // cameraView.material = palmDetect.transformMat;
+        // cameraView.rectTransform.GetWorldCorners(rtCorners);
+        // cameraView.gameObject.SetActive(false);
+        // text.text = "BEFORE RESULTS";
+        
 
         palmResults = palmDetect.GetResults(0.7f, 0.3f);
+        // text.text = palmResults.ToString();
 
 
         if (palmResults.Count <= 0) return;
 
+        // text.text = "BEFORE LANDMARK INVOKE";
+
         // Detect only first palm
         landmarkDetect.Invoke(m_Texture, palmResults[0]);
+        // text.text = "AFTER LANDMARK INVOKE";
+
         // landmarkDetect.Invoke(webcamTexture, palmResults[0]);
-        debugPalmView.texture = landmarkDetect.inputTex;
+        // debugPalmView.texture = landmarkDetect.inputTex;
+        // text.text = "BEFORE LANDMARK RESULT";
+
 
         landmarkResult = landmarkDetect.GetResult();
+        // text.text = "AFTER LANDMARK RESULT";
     }
 
     async UniTask<bool> InvokeAsync()
     {
         palmResults = await palmDetect.InvokeAsync(m_Texture, cancellationToken);
         // palmResults = await palmDetect.InvokeAsync(webcamTexture, cancellationToken);
-        cameraView.material = palmDetect.transformMat;
-        cameraView.rectTransform.GetWorldCorners(rtCorners);
+        // cameraView.material = palmDetect.transformMat;
+        // cameraView.rectTransform.GetWorldCorners(rtCorners);
 
         if (palmResults.Count <= 0) return false;
 
         landmarkResult = await landmarkDetect.InvokeAsync(m_Texture, palmResults[0], cancellationToken);
         // landmarkResult = await landmarkDetect.InvokeAsync(webcamTexture, palmResults[0], cancellationToken);
-        debugPalmView.texture = landmarkDetect.inputTex;
+        // debugPalmView.texture = landmarkDetect.inputTex;
 
         return true;
     }
@@ -162,10 +174,11 @@ public class HandTrackingSample : MonoBehaviour
         Vector3 min = rtCorners[0];
         Vector3 max = rtCorners[2];
 
-        var mtx = new Matrix4x4();
-
         // var mtx = WebCamUtil.GetMatrix(-webcamTexture.videoRotationAngle, false, webcamTexture.videoVerticallyMirrored)
         //     * matrix.inverse;
+
+        var mtx = PUSH_MATRIX * Matrix4x4.TRS(new Vector3(0, 0, 0), Quaternion.Euler(0, 0, -90), new Vector3(1, 1, 1)) * POP_MATRIX * matrix.inverse;
+
         Vector3 a = MathTF.LerpUnclamped(min, max, mtx.MultiplyPoint3x4(new Vector3(0, 0, 0)));
         Vector3 b = MathTF.LerpUnclamped(min, max, mtx.MultiplyPoint3x4(new Vector3(1, 0, 0)));
         Vector3 c = MathTF.LerpUnclamped(min, max, mtx.MultiplyPoint3x4(new Vector3(1, 1, 0)));
@@ -184,9 +197,10 @@ public class HandTrackingSample : MonoBehaviour
         Vector3 max = rtCorners[2];
 
         // Need to apply camera rotation and mirror on mobile
-        var mtx = new Matrix4x4();
 
         // Matrix4x4 mtx = WebCamUtil.GetMatrix(-webcamTexture.videoRotationAngle, false, webcamTexture.videoVerticallyMirrored);
+        var mtx = PUSH_MATRIX * Matrix4x4.TRS(new Vector3(0, 0, 0), Quaternion.Euler(0, 0, -90), new Vector3(1, 1, 1)) * POP_MATRIX;
+
 
         // Get joint locations in the world space
         float zScale = max.x - min.x;
@@ -196,7 +210,10 @@ public class HandTrackingSample : MonoBehaviour
             Vector3 p1 = MathTF.Lerp(min, max, p0);
             p1.z += (p0.z - 0.5f) * zScale;
             worldJoints[i] = p1;
+            // markers[i].transform.position = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth * (1-joints[i].y), Camera.main.pixelHeight * joints[0].x, Camera.main.nearClipPlane + 0.01f));
         }
+
+        // sphere.transform.position = Camera.main.ScreenToWorldPoint(new Vector3(Camera.main.pixelWidth * joints[0].x, Camera.main.pixelHeight * joints[0].y, Camera.main.nearClipPlane + 0.01f));
 
         // Cube
         for (int i = 0; i < HandLandmarkDetect.JOINT_COUNT; i++)
@@ -217,7 +234,8 @@ public class HandTrackingSample : MonoBehaviour
         draw.Apply();
     }
 
-    void DetectGestures() {
+    void DetectGestures()
+    {
         // finger states
         bool thumbIsOpen = false;
         bool firstFingerIsOpen = false;
@@ -302,15 +320,16 @@ public class HandTrackingSample : MonoBehaviour
         //     text.text =  "Finger States: " + thumbIsOpen + " " + firstFingerIsOpen + " " + secondFingerIsOpen + " " + thirdFingerIsOpen + " " + fourthFingerIsOpen;
         // }
 
-        if (areNear(worldJoints[4], worldJoints[8])) {
-            text.text = "GRAB!";
-        }
-        else {
-            text.text = "RELEASE!";
-        }
+        // if (areNear(worldJoints[4], worldJoints[8])) {
+        // text.text = "GRAB!";
+        // }
+        // else {
+        // text.text = "RELEASE!";
+        // }
     }
 
-    bool areNear(Vector3 first, Vector3 second) {
+    bool areNear(Vector3 first, Vector3 second)
+    {
         return Vector3.Distance(first, second) < 1;
     }
 
@@ -373,6 +392,27 @@ public class HandTrackingSample : MonoBehaviour
 
         // Done with your temporary data, so you can dispose it.
         buffer.Dispose();
+
+        if (runBackground)
+        {
+            if (task.Status.IsCompleted())
+            {
+                task = InvokeAsync();
+            }
+        }
+        else
+        {
+            Invoke();
+        }
+
+        if (palmResults == null || palmResults.Count <= 0) return;
+        DrawFrames(palmResults);
+
+
+        if (landmarkResult == null || landmarkResult.score < 0.2f) return;
+        DrawCropMatrix(landmarkDetect.CropMatrix);
+        DrawJoints(landmarkResult.joints);
+        DetectGestures();
     }
 
 }

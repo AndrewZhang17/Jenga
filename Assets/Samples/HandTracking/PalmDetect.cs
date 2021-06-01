@@ -11,8 +11,6 @@ namespace TensorFlowLite
 
     public class PalmDetect : BaseImagePredictor<float>
     {
-
-
         public struct Result
         {
             public float score;
@@ -66,14 +64,19 @@ namespace TensorFlowLite
             // const float OFFSET = 128f;
             // const float SCALE = 1f / 128f;
             // ToTensor(inputTex, input0, OFFSET, SCALE);
+            // HandTrackingSample.text.text = "START INVOKE";
             ToTensor(inputTex, input0);
 
+            // HandTrackingSample.text.text = "AFTER TOTENSOR";
 
             interpreter.SetInputTensorData(0, input0);
+            // HandTrackingSample.text.text = "BEFORE INTERPRETER INVOKE";
             interpreter.Invoke();
+            // HandTrackingSample.text.text = "AFTER INTERPRETER INVOKE";
 
             interpreter.GetOutputTensorData(0, output0);
             interpreter.GetOutputTensorData(1, output1);
+            // HandTrackingSample.text.text = "END INVOKE";
         }
 
         public async UniTask<List<Result>> InvokeAsync(Texture inputTex, CancellationToken cancellationToken)

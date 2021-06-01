@@ -290,7 +290,7 @@ GameObject:
   - component: {fileID: 443261094}
   m_Layer: 5
   m_Name: Text
-  m_TagString: Untagged
+  m_TagString: DebugText
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -653,7 +653,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1443920252
 Transform:
   m_ObjectHideFlags: 0
@@ -846,7 +846,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7326214564349382827, guid: 8a64bd958d100c740be3731008dbf5ce, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7326214564349382830, guid: 8a64bd958d100c740be3731008dbf5ce, type: 3}
       propertyPath: text
@@ -854,6 +854,14 @@ PrefabInstance:
       objectReference: {fileID: 443261094}
     - target: {fileID: 7326214564349382830, guid: 8a64bd958d100c740be3731008dbf5ce, type: 3}
       propertyPath: cameraView
+      value: 
+      objectReference: {fileID: 2060160157}
+    - target: {fileID: 7326214564349382830, guid: 8a64bd958d100c740be3731008dbf5ce, type: 3}
+      propertyPath: cameraManager
+      value: 
+      objectReference: {fileID: 655392189}
+    - target: {fileID: 7326214564349382830, guid: 8a64bd958d100c740be3731008dbf5ce, type: 3}
+      propertyPath: debugPalmView
       value: 
       objectReference: {fileID: 2060160157}
     m_RemovedComponents: []
@@ -876,7 +884,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2060160156
 RectTransform:
   m_ObjectHideFlags: 0
@@ -894,7 +902,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -736, y: 0}
+  m_SizeDelta: {x: -1121.2632, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &2060160157
 MonoBehaviour:
@@ -944,7 +952,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 3
-  m_AspectRatio: 1
+  m_AspectRatio: 0.47368422
 --- !u!1 &2133907854
 GameObject:
   m_ObjectHideFlags: 0
@@ -963,7 +971,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2133907855
 MonoBehaviour:
   m_ObjectHideFlags: 0
