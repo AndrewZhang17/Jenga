@@ -63,6 +63,10 @@ public class GameController : MonoBehaviour
             Destroy(block.gameObject);
         }
 
+        // Delete existing data in Firebase
+        database.GetReference(DB_PATH).SetRawJsonValueAsync("{\"turn\": 1}");
+
+        // Render and save blocks
         Vector3 dims = BlockPrefab.GetComponent<Renderer>().bounds.size;
         blockWidth = dims.z;
         blockHeight = dims.y;
