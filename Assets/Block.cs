@@ -18,7 +18,7 @@ public class Block : MonoBehaviour
 
     private Vector3 oldPos;
 
-    private float threshold = 0.025f;
+    private float threshold = 0.001f;
 
     private bool isNewPiece = false;
 
